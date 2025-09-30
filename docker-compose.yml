@@ -1,0 +1,37 @@
+services:
+  kuksa-databroker:
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker:main
+    container_name: Server
+    command: ["--insecure"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    network_mode: host
+
+  kuksa-databroker-cli:
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker-cli:main
+    container_name: kuksa-databroker-cli
+    depends_on:
+      - kuksa-databroker
+    environment:
+      KUKSA_DATABROKER_SERVER: "kuksa-databroker"
+      KUKSA_PORT: "55555"
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    network_mode: host
+
+  kuksa-can-feeder:
+    image: oxhunt/kc-provider:latest
+    container_name: kuksa-can-feeder
+    depends_on:
+      - kuksa-databroker
+    volumes:
+      - ${PWD}/kuksa-feeder-files:/kuksa-feeder-files
+    environment:
+      LOG_LEVEL: INFO
+    command: ["--config", "/kuksa-feeder-files/dbc_feeder.ini"]
+    restart: unless-stopped
+    network_mode: host
+
+
